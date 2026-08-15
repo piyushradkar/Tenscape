@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Disable browser caching during local development -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <title>Tenement Exchange - Global Mineral Exploration Marketplace</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="main.css?v=41.0">
+</head>
+<body>
+
+  <!-- FIRST RIBBON: Top Brand & Page Options -->
+  <header class="top-ribbon">
+    <div class="ribbon-left">
+      <a href="#" class="brand-logo">
+        <div class="logo-icon">
+          <i class="fa-solid fa-earth-americas"></i>
+        </div>
+        <div class="logo-text">
+          <span class="logo-primary">TENEMENT</span>
+          <span class="logo-secondary">EXCHANGE</span>
+        </div>
+      </a>
+      
+      <!-- Primary Page Options Navigation -->
+      <nav class="top-nav-links">
+        <a href="#" class="nav-item active" title="Interactive Tenement Marketplace Map">
+          <i class="fa-solid fa-map-location-dot"></i> Tenements Atlas
+        </a>
+        <a href="#" class="nav-item" title="TenTalk - Tenement Gossip & Community Hub">
+          <i class="fa-solid fa-comments"></i> TenTalk <span class="nav-gossip-badge">Gossip</span>
+        </a>
+        <a href="#" class="nav-item" title="Help & Platform Documentation">
+          <i class="fa-solid fa-circle-question"></i> Help
+        </a>
+        <a href="#" class="nav-item" title="Contact Us">
+          <i class="fa-solid fa-envelope"></i> Contact Us
+        </a>
+      </nav>
+    </div>
+
+    <div class="ribbon-right">
+      <button class="btn-secondary" id="vdrNavBtn">
+        <i class="fa-solid fa-shield-halved"></i> Data Room
+      </button>
+      <button class="btn-primary" id="listPropertyBtn">
+        <i class="fa-solid fa-plus"></i> List a Tenement
+      </button>
+      <div class="user-profile-menu">
+        <div class="avatar">JS</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SECOND RIBBON: Dedicated Filter Bar -->
+  <div class="sub-filter-ribbon">
+    <div class="filter-search-container">
+      <div class="search-input-group">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Search by region, commodity, or tenure ID (e.g. Paterson, Lithium, EL32205)...">
+      </div>
+      
+      <div class="filter-dropdowns">
+        <select id="commodityFilter" class="filter-select">
+          <option value="all">All Commodities</option>
+          <option value="Au">Gold (Au)</option>
+          <option value="Li">Lithium (Li)</option>
+          <option value="Cu">Copper (Cu)</option>
+          <option value="REE">Rare Earths (REE)</option>
+          <option value="U">Uranium (U)</option>
+          <option value="Ni">Nickel (Ni)</option>
+        </select>
+        
+        <select id="jurisdictionFilter" class="filter-select">
+          <option value="all">All Jurisdictions</option>
+          <option value="NT">Northern Territory (NT)</option>
+          <option value="WA">Western Australia</option>
+          <option value="QLD">Queensland</option>
+          <option value="BC">British Columbia, Canada</option>
+          <option value="PER">Peru (South America)</option>
+          <option value="NV">Nevada, USA</option>
+          <option value="CHL">Atacama, Chile</option>
+        </select>
+
+        <select id="dealFilter" class="filter-select">
+          <option value="all">All Deal Types</option>
+          <option value="Outright Sale">100% Outright Sale</option>
+          <option value="Farm-In JV">Farm-in / Joint Venture</option>
+          <option value="Royalty">Royalty Sale (NSR)</option>
+          <option value="Option">Option Agreement</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Split-Screen Container -->
+  <main class="main-split-container">
+    
+    <!-- Left Sidebar: Tenement Listings (Narrower Column) -->
+    <section class="listings-sidebar">
+      <div class="listings-header">
+        <div class="results-info">
+          <h1 class="results-title">Global Tenements</h1>
+          <p class="results-count"><span id="activeCount">10</span> verified claims</p>
+        </div>
+        
+        <div class="sort-container">
+          <label for="sortBy">Sort:</label>
+          <select id="sortBy" class="sort-select">
+            <option value="featured">Featured First</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="area-large">Area: Largest First</option>
+            <option value="newest">Newest Listed</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tenements Cards List Container -->
+      <div class="tenements-list" id="tenementsList">
+        <!-- Dynamic Cards rendered via JS -->
+      </div>
+    </section>
+
+    <!-- Right Side: Interactive Map & Overlays -->
+    <section class="map-viewport">
+      <div id="map"></div>
+
+      <!-- Floating Map Layer Control Box (Top Right) -->
+      <div class="map-layers-widget">
+        <div class="layers-header" id="layersHeader">
+          <div class="layers-title">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Map GIS Layers</span>
+          </div>
+          <i class="fa-solid fa-chevron-down toggle-icon" id="layersToggle"></i>
+        </div>
+        
+        <div class="layers-body" id="layersBody">
+          
+          <!-- NT Cadastre Collapsible Section -->
+          <div class="layer-collapsible-group">
+            <div class="layer-collapsible-header">
+              <span><i class="fa-solid fa-map-location-dot text-green"></i> Northern Territory Cadastre</span>
+              <i class="fa-solid fa-chevron-down section-chevron"></i>
+            </div>
+            <div class="layer-collapsible-content">
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerNTExplGrnt" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box polygon-box"></span>
+                  <span class="layer-name">NT Granted Titles (953)</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerNTExplAppl" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box cadastre-box"></span>
+                  <span class="layer-name">NT Applications (805)</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerNTProd" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box mines-box"></span>
+                  <span class="layer-name">NT Mining & Prod (1,610)</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerNTReserves">
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box restricted-box"></span>
+                  <span class="layer-name">NT Reserved Land (166)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- WA Cadastre Collapsible Section -->
+          <div class="layer-collapsible-group">
+            <div class="layer-collapsible-header">
+              <span><i class="fa-solid fa-map-location-dot text-green"></i> Western Australia Cadastre</span>
+              <i class="fa-solid fa-chevron-down section-chevron"></i>
+            </div>
+            <div class="layer-collapsible-content">
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerWAExplGrnt" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box polygon-box"></span>
+                  <span class="layer-name">WA Granted Titles (16,202)</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerWAExplAppl" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box cadastre-box"></span>
+                  <span class="layer-name">WA Applications (5,909)</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerWAProd" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box mines-box"></span>
+                  <span class="layer-name">WA Mining Leases (8,347)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- BC Cadastre Collapsible Section -->
+          <div class="layer-collapsible-group">
+            <div class="layer-collapsible-header">
+              <span><i class="fa-solid fa-map-location-dot text-green"></i> British Columbia Cadastre (Canada)</span>
+              <i class="fa-solid fa-chevron-down section-chevron"></i>
+            </div>
+            <div class="layer-collapsible-content">
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerBCLiveStream" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box polygon-box"></span>
+                  <span class="layer-name">🌐 BC Live Direct WFS Stream</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- PERU Cadastre Collapsible Section -->
+          <div class="layer-collapsible-group">
+            <div class="layer-collapsible-header">
+              <span><i class="fa-solid fa-map-location-dot text-green"></i> Peru Cadastre (INGEMMET / MINEM)</span>
+              <i class="fa-solid fa-chevron-down section-chevron"></i>
+            </div>
+            <div class="layer-collapsible-content">
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerPERLiveStream" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box polygon-box"></span>
+                  <span class="layer-name">🌐 Catastro Minero - DGM (MINEM) Stream</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Global Overlays Collapsible Section -->
+          <div class="layer-collapsible-group">
+            <div class="layer-collapsible-header">
+              <span><i class="fa-solid fa-earth-australia text-green"></i> Global Overlays</span>
+              <i class="fa-solid fa-chevron-down section-chevron"></i>
+            </div>
+            <div class="layer-collapsible-content">
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerTenements" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box polygon-box"></span>
+                  <span class="layer-name">Featured Marketplace Claims</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerGeology" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box geology-box"></span>
+                  <span class="layer-name">Regional Faults & Geology</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerAssays" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box assays-box"></span>
+                  <span class="layer-name">Historical Drill Assays</span>
+                </label>
+              </div>
+
+              <div class="layer-item">
+                <label class="layer-checkbox-label">
+                  <input type="checkbox" id="layerMines" checked>
+                  <span class="custom-checkmark"></span>
+                  <span class="layer-color-box mines-box"></span>
+                  <span class="layer-name">Operating Mines</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="layers-footer">
+            <span class="cadastre-status-text">
+              <i class="fa-solid fa-circle-check text-green"></i> Cadastre Status: <strong>NT (3,500+), WA (30,458), BC & PERU (Live Direct Web API)</strong>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Map Action Controls (Bottom Right) -->
+      <div class="map-floating-controls">
+        <button class="map-control-btn" id="resetMapBtn" title="Reset View to Global">
+          <i class="fa-solid fa-compress"></i>
+        </button>
+        <button class="map-control-btn" id="toggleBasemapBtn" title="Toggle Satellite / Light Map">
+          <i class="fa-solid fa-map"></i>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 50:50 SPLIT-SCREEN LISTING CREATOR PAGE (FORM LEFT 50%, MAP RIGHT 50%) -->
+  <div class="create-listing-page" id="createListingPage" style="display: none;">
+    
+    <!-- LEFT COLUMN (50% WIDTH): FORM -->
+    <div class="create-form-col">
+      <div class="form-col-header">
+        <button class="btn-back-link" id="backToAtlasBtn">
+          <i class="fa-solid fa-arrow-left"></i> Back to Tenements Atlas
+        </button>
+        <h2 class="form-page-title">List a Tenement for Sale / Joint Venture</h2>
+        <p class="form-page-subtitle">Select cadastre tenements or enter details manually. The map on the right updates live.</p>
+      </div>
+
+      <div class="form-scroll-body">
+        
+        <!-- SECTION 1: PROJECT NAME & TENEMENTS SEARCH -->
+        <div class="form-card-section">
+          <h3 class="section-title"><i class="fa-solid fa-folder-tree text-green"></i> Project & Tenements</h3>
+          
+          <div class="form-group">
+            <label class="form-label" for="newProjectName">Project Name <span class="label-optional">(Optional)</span></label>
+            <input type="text" id="newProjectName" class="form-input" placeholder="e.g. Pine Creek Gold Package, Paterson South Project...">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Tenements <span class="label-mandatory">* Select from map or search database</span></label>
+
+            <!-- Select Tenements Directly from Map Banner -->
+            <div class="map-selection-banner" id="mapSelectionBanner">
+              <div class="map-select-info">
+                <i class="fa-solid fa-hand-pointer text-green"></i>
+                <div>
+                  <strong>Click Map to Select Tenements</strong>
+                  <div class="text-xs text-muted">Click any WA, NT, BC, or Peru tenement on the map on the right to add to your listing package.</div>
+                </div>
+              </div>
+              <button class="btn-map-select-toggle active" id="toggleMapSelectionModeBtn" type="button">
+                <i class="fa-solid fa-crosshairs"></i> Map Selection Active
+              </button>
+            </div>
+
+            <div class="cadastre-search-wrapper">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="cadastreSearchInput" class="form-input search-input" placeholder="Or type Title ID to search (e.g. E 08/3124, EL32205, M15/1820)...">
+              <div class="cadastre-results-dropdown" id="cadastreSearchResults" style="display: none;"></div>
+            </div>
+            
+            <!-- Selected Tenements Chip Container -->
+            <div class="selected-chips-container" id="selectedChipsList">
+              <span class="chips-placeholder">No tenements selected yet. Click map on the right or search database above.</span>
+            </div>
+
+            <!-- Manual Entry Toggle -->
+            <div class="manual-entry-banner">
+              <span>Can't find your tenement in the database?</span>
+              <button class="btn-text-action" id="toggleManualBtn" type="button">
+                <i class="fa-solid fa-pen-to-square"></i> Not in database, enter manually
+              </button>
+            </div>
+
+            <!-- Manual Entry Sub-Panel (Hidden by default) -->
+            <div class="manual-panel" id="manualEntryPanel" style="display: none;">
+              <div class="manual-panel-header">
+                <strong><i class="fa-solid fa-cloud-arrow-up"></i> Manual Tenement Entry</strong>
+                <span class="text-muted">Upload shapefile or specify center point</span>
+              </div>
+
+              <div class="form-group margin-top-sm">
+                <label class="form-label">Upload Shapefile / KML / GeoJSON <span class="label-optional">(Optional)</span></label>
+                <div class="file-drop-zone" id="shapefileDropZone">
+                  <i class="fa-solid fa-file-polygon text-green drop-icon"></i>
+                  <span>Drag & drop <strong>.shp, .kml, or .geojson</strong> file here</span>
+                  <span class="text-muted text-xs">or click to browse local files</span>
+                  <input type="file" id="shapefileInput" accept=".shp,.zip,.kml,.geojson,.json" style="display: none;">
+                </div>
+              </div>
+
+              <div class="form-group coords-group">
+                <label class="form-label coords-label">Center Point Coordinates <span class="label-mandatory">* Mandatory if no shapefile</span></label>
+                <div class="coords-input-row">
+                  <input type="text" id="manualLatInput" class="form-input" placeholder="Latitude (e.g. -19.65)">
+                  <input type="text" id="manualLngInput" class="form-input" placeholder="Longitude (e.g. 134.18)">
+                  <button class="btn-secondary" id="pickMapCoordsBtn" type="button" title="Click on the right map to pick location">
+                    <i class="fa-solid fa-crosshairs"></i> Pick on Map
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: LOCATION & AREA -->
+        <div class="form-card-section">
+          <h3 class="section-title"><i class="fa-solid fa-location-dot text-green"></i> Location & Area</h3>
+          
+          <div class="form-grid-2col">
+            <div class="form-group">
+              <label class="form-label" for="manualState">State / Territory <span class="label-mandatory">* Mandatory</span></label>
+              <input type="text" id="manualState" class="form-input" placeholder="e.g. Northern Territory, WA, QLD...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="manualCountry">Country <span class="label-mandatory">* Mandatory</span></label>
+              <input type="text" id="manualCountry" class="form-input" value="Australia" placeholder="e.g. Australia, Canada, USA...">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="manualArea">Total Area <span class="label-mandatory">* Mandatory (Auto-calculated from DB)</span></label>
+            <div class="area-input-group">
+              <input type="number" id="manualArea" class="form-input" placeholder="Self-calculated from database (editable)..." step="0.1">
+              <select id="manualAreaUnit" class="form-select unit-select">
+                <option value="km2">km²</option>
+                <option value="Ha">Hectares</option>
+                <option value="Sub-Blocks">Sub-Blocks</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: EXPLORATION DETAILS & ACTIVITIES -->
+        <div class="form-card-section">
+          <h3 class="section-title"><i class="fa-solid fa-bore-hole text-green"></i> Exploration Details</h3>
+          
+          <div class="form-group">
+            <label class="form-label" for="explorationStage">Exploration Stage <span class="label-optional">(Optional)</span></label>
+            <select id="explorationStage" class="form-select">
+              <option value="">Select Exploration Stage...</option>
+              <option value="Greenfields">Greenfields</option>
+              <option value="Early Exploration">Early Exploration</option>
+              <option value="Advanced Exploration">Advanced Exploration</option>
+              <option value="Drill-Ready">Drill-Ready / Pre-Feasibility</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="tenementSummary">Summary of Tenement Details <span class="label-optional">(Optional)</span></label>
+            <textarea id="tenementSummary" class="form-textarea" rows="3" placeholder="Provide a brief geological overview, target lithology, structural setting, or access details..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="activitiesCompleted">Exploration Activities Completed to Date <span class="label-optional">(Optional)</span></label>
+            <textarea id="activitiesCompleted" class="form-textarea" rows="3" placeholder="Detail historical drilling meters, soil geochemistry, rock chips, aeromagnetic surveys..."></textarea>
+          </div>
+        </div>
+
+        <!-- SECTION 4: ROYALTIES & TRANSACTION STRUCTURE -->
+        <div class="form-card-section">
+          <h3 class="section-title"><i class="fa-solid fa-file-contract text-green"></i> Royalties & Deal Structure</h3>
+          
+          <div class="form-group">
+            <label class="form-label">Royalties on Tenements Summary <span class="label-optional">(Optional)</span></label>
+            <div class="pill-radio-group">
+              <label class="pill-radio-label">
+                <input type="radio" name="royaltyChoice" value="No" checked>
+                <span class="pill-btn">No Royalties</span>
+              </label>
+              <label class="pill-radio-label">
+                <input type="radio" name="royaltyChoice" value="Yes">
+                <span class="pill-btn">Yes (NSR / Gross)</span>
+              </label>
+              <label class="pill-radio-label">
+                <input type="radio" name="royaltyChoice" value="Partial">
+                <span class="pill-btn">Partial / Third-Party</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Preferred Transaction Structure <span class="label-mandatory">* Select all that apply</span></label>
+            <div class="pill-checkbox-group">
+              <label class="pill-check-label">
+                <input type="checkbox" name="dealStructure" value="100% Outright Sale">
+                <span class="pill-check-btn">100% Outright Sale</span>
+              </label>
+              <label class="pill-check-label">
+                <input type="checkbox" name="dealStructure" value="Farm-In / Joint Venture" checked>
+                <span class="pill-check-btn">Farm-In / Joint Venture</span>
+              </label>
+              <label class="pill-check-label">
+                <input type="checkbox" name="dealStructure" value="Option Agreement">
+                <span class="pill-check-btn">Option Agreement</span>
+              </label>
+              <label class="pill-check-label">
+                <input type="checkbox" name="dealStructure" value="Royalty Sale">
+                <span class="pill-check-btn">Royalty Sale (NSR)</span>
+              </label>
+              <label class="pill-check-label">
+                <input type="checkbox" name="dealStructure" value="Flexible">
+                <span class="pill-check-btn highlight-flexible">Flexible</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: ATTACHMENTS (OPTIONAL) -->
+        <div class="form-card-section">
+          <h3 class="section-title"><i class="fa-solid fa-paperclip text-green"></i> Attachments</h3>
+          
+          <div class="form-grid-2col">
+            <div class="form-group">
+              <label class="form-label">1) Attach Images <span class="label-optional">(Optional)</span></label>
+              <div class="attachment-upload-box" id="imageUploadBox">
+                <i class="fa-solid fa-image text-green"></i>
+                <span>Attach Outcrop / Core Photos</span>
+                <span class="text-xs text-muted">PNG, JPG, WEBP</span>
+                <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">2) Attach Documents <span class="label-optional">(Optional)</span></label>
+              <div class="attachment-upload-box" id="docUploadBox">
+                <i class="fa-solid fa-file-pdf text-green"></i>
+                <span>Attach Technical Reports / CSV</span>
+                <span class="text-xs text-muted">PDF, CSV, ZIP</span>
+                <input type="file" id="docInput" accept=".pdf,.csv,.zip" multiple style="display: none;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- End form-scroll-body -->
+
+      <!-- FIXED BOTTOM BUTTONS BAR -->
+      <div class="form-bottom-actions">
+        <button class="btn-secondary" id="saveDraftListingBtn" type="button">
+          <i class="fa-solid fa-floppy-disk"></i> Save Draft
+        </button>
+        <button class="btn-primary" id="submitReviewListingBtn" type="button">
+          <i class="fa-solid fa-paper-plane"></i> Submit for Review
+        </button>
+        <button class="btn-secondary btn-cancel-box" id="cancelListingViewBtn" type="button">
+          <i class="fa-solid fa-xmark"></i> Cancel
+        </button>
+      </div>
+    </div> <!-- End create-form-col -->
+
+    <!-- RIGHT COLUMN (50% WIDTH): STICKY MAP VIEWPORT -->
+    <div class="create-map-col">
+      <div id="createMap" class="create-map-viewport"></div>
+      
+      <!-- Layer Selector Pill on Right Map -->
+      <div class="create-map-layer-selector">
+        <div class="create-layer-pill">
+          <i class="fa-solid fa-layer-group text-green"></i> Layer:
+          <select id="createMapJurisdiction" class="create-jur-select">
+            <option value="WA" selected>Western Australia (WA Cadastre)</option>
+            <option value="NT">Northern Territory (NT Cadastre)</option>
+            <option value="BC">British Columbia, Canada</option>
+            <option value="PER">Peru (INGEMMET Cadastre)</option>
+            <option value="ALL">All Cadastre Layers</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Floating Map Info Badge -->
+      <div class="create-map-badge">
+        <i class="fa-solid fa-hand-pointer text-red"></i> Click map polygon to select (<span id="createMapCount">0</span> selected)
+      </div>
+    </div> <!-- End create-map-col -->
+
+  </div> <!-- End create-listing-page -->
+
+  <!-- TENEMENT DETAIL & PROPERTY INTELLIGENCE PAGE -->
+  <div class="detail-page-container" id="tenementDetailPage" style="display: none;">
+    
+    <!-- TOP STICKY HEADER NAV (EXACT SAME DIMENSIONS, HEIGHT & LOOK AS MAIN SUB-FILTER RIBBON) -->
+    <div class="detail-top-nav">
+      <div class="detail-nav-left">
+        <button class="btn-secondary" id="backToAtlasFromDetailBtn" type="button">
+          <i class="fa-solid fa-arrow-left"></i> Marketplace
+        </button>
+        <div class="detail-title-group">
+          <h2 class="detail-page-title" id="detailTenementTitle">Paterson South Gold-Copper Project</h2>
+        </div>
+      </div>
+
+      <div class="detail-nav-actions">
+        <button class="btn-secondary" id="saveFavoriteDetailBtn" type="button">
+          <i class="fa-regular fa-star"></i> Save Property
+        </button>
+        <button class="btn-secondary" id="downloadTeaserBtn" type="button">
+          <i class="fa-solid fa-file-arrow-down"></i> Teaser PDF
+        </button>
+        <button class="btn-secondary" id="openVdrFromDetailBtn" type="button">
+          <i class="fa-solid fa-shield-halved"></i> Request VDR Access
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN SCROLLABLE CONTENT BODY -->
+    <div class="detail-scroll-body">
+      
+      <!-- HERO SPLIT SECTION: LEFT TABBED BOX (40%), RIGHT MAP (60%) -->
+      <div class="detail-hero-grid">
+        
+        <!-- LEFT COLUMN (40%): TABBED PROPERTY INTELLIGENCE CARD -->
+        <div class="detail-deal-card">
+          
+          <!-- TAB HEADER NAV (5 TABS WITH CHROME DOWN-ARROW DROPDOWN) -->
+          <div class="left-card-tabs-nav">
+            <div class="left-tab-dropdown-wrapper">
+              <button class="left-tab-dropdown-btn" id="leftTabDropdownBtn" type="button" title="Search or switch tabs">
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
+              <div class="left-tab-menu-dropdown" id="leftTabMenuDropdown" style="display: none;">
+                <div class="tab-menu-item active" data-tab="tabSummary">Summary</div>
+                <div class="tab-menu-item" data-tab="tabOwnership">Ownership</div>
+                <div class="tab-menu-item" data-tab="tabGeology">Geology</div>
+                <div class="tab-menu-item" data-tab="tabDrilling">Historical Work</div>
+                <div class="tab-menu-item" data-tab="tabVDR">Documents</div>
+              </div>
+            </div>
+
+            <button class="left-tab-btn active" data-tab="tabSummary">Summary</button>
+            <button class="left-tab-btn" data-tab="tabOwnership">Ownership</button>
+            <button class="left-tab-btn" data-tab="tabGeology">Geology</button>
+            <button class="left-tab-btn" data-tab="tabDrilling">Historical Work</button>
+            <button class="left-tab-btn" data-tab="tabVDR">Documents</button>
+          </div>
+
+          <!-- TAB 1: SUMMARY -->
+          <div class="left-tab-pane active" id="tabSummary">
+            <div class="deal-price-section">
+              <div class="price-label-text">Asking Price / Deal Structure:</div>
+              <div class="price-hero-amount" id="detailAskingPrice">$1,450,000 AUD</div>
+              <div class="price-deal-type" id="detailDealType"><i class="fa-solid fa-handshake text-green"></i> 70% Farm-In / Joint Venture Option</div>
+            </div>
+
+            <div class="deal-metrics-grid">
+              <div class="metric-box">
+                <i class="fa-solid fa-map-pin text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Tenement ID(s)</span>
+                  <strong class="metric-val" id="detailTenureId">E 45/5892</strong>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <i class="fa-solid fa-vector-square text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Total Area</span>
+                  <strong class="metric-val" id="detailArea">234.0 km² (78 Sub-blocks)</strong>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <i class="fa-solid fa-gem text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Target Commodities</span>
+                  <strong class="metric-val" id="detailCommodities">Au, Cu, Co</strong>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <i class="fa-solid fa-location-dot text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Location / Jurisdiction</span>
+                  <strong class="metric-val" id="detailLocation">Western Australia</strong>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <i class="fa-solid fa-file-contract text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Type of Licence</span>
+                  <strong class="metric-val" id="detailLicenceType">Granted Licence</strong>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <i class="fa-solid fa-circle-check text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Verified</span>
+                  <strong class="metric-val text-green" id="detailVerifiedStatus">✔ Cadastre Verified</strong>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <i class="fa-solid fa-calendar-check text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Expiry Date</span>
+                  <strong class="metric-val" id="detailExpiry">2031-12-01 (Granted)</strong>
+                </div>
+              </div>
+
+              <div class="metric-box">
+                <i class="fa-solid fa-sack-dollar text-green"></i>
+                <div class="metric-info">
+                  <span class="metric-label">Annual Commitment</span>
+                  <strong class="metric-val" id="detailCommitment">$140,000 AUD / yr</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Native Title & Approvals Summary -->
+            <div class="approvals-summary-box">
+              <div class="approval-item"><i class="fa-solid fa-shield-cat text-green"></i> <strong>Native Title:</strong> <span id="detailNativeTitle">Agreement Executed / Clear</span></div>
+              <div class="approval-item"><i class="fa-solid fa-stamp text-green"></i> <strong>Heritage Clearance:</strong> <span id="detailHeritage">Survey Complete (Zero Restrictions)</span></div>
+              <div class="approval-item"><i class="fa-solid fa-file-signature text-green"></i> <strong>Environmental Permit:</strong> <span id="detailEnvironmental">PoW Approved (Drill-Ready)</span></div>
+            </div>
+
+            <button class="btn-primary btn-full-width margin-top-sm" id="dealCardVdrBtn">
+              <i class="fa-solid fa-key"></i> Request Virtual Data Room Access
+            </button>
+          </div>
+
+          <!-- TAB 2: OWNERSHIP -->
+          <div class="left-tab-pane" id="tabOwnership">
+            <div class="pane-card">
+              <h4 class="pane-card-title">Cadastre Ownership & Compliance</h4>
+              <ul class="legal-info-list">
+                <li><strong>Registered Holder:</strong> Paterson Minerals Pty Ltd (100%)</li>
+                <li><strong>Tenement Status:</strong> Granted Exploration Licence</li>
+                <li><strong>Statutory Rent Paid:</strong> Compliant (Paid to Dec 2026)</li>
+                <li><strong>Minimum Expenditure:</strong> $140,000 AUD per annum</li>
+                <li><strong>Environmental Bond:</strong> $25,000 AUD lodged with DEMIRS</li>
+              </ul>
+            </div>
+
+            <div class="pane-card margin-top-sm">
+              <h4 class="pane-card-title">Native Title & Royalty Terms</h4>
+              <ul class="legal-info-list">
+                <li><strong>Native Title Claim:</strong> Jamukurnu-Yapirtirna People (Executed Agreement)</li>
+                <li><strong>Heritage Clearance:</strong> Work Area Clearance (WAC) completed</li>
+                <li><strong>Vendor Royalty:</strong> 1.5% Net Smelter Return (NSR) retained</li>
+                <li><strong>Third-Party Royalties:</strong> Nil</li>
+              </ul>
+            </div>
+
+            <div class="pane-card margin-top-sm">
+              <h4 class="pane-card-title">Location, Logistics & Access</h4>
+              <div class="infra-grid">
+                <div class="infra-item">
+                  <i class="fa-solid fa-industry text-green"></i>
+                  <div>
+                    <strong>Processing Mill Proximity</strong>
+                    <p>85 km south of Telfer Gold-Copper Operation.</p>
+                  </div>
+                </div>
+                <div class="infra-item">
+                  <i class="fa-solid fa-road text-green"></i>
+                  <div>
+                    <strong>Sealed Road & Track Access</strong>
+                    <p>Direct access via Ripon Hills Road.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: GEOLOGY -->
+          <div class="left-tab-pane" id="tabGeology">
+            <div class="pane-card">
+              <h4 class="pane-card-title">Geological Setting & Lithology</h4>
+              <p class="pane-text" id="detailGeologyDesc">
+                Situated within the world-class Paterson Orogen. Host rocks comprise Proterozoic metasedimentary sequences of the Yeneena Supergroup, cut by major NW-trending regional shear zones. Porphyry copper-gold and intrusive-related mineralisation models apply.
+              </p>
+              <div class="lithology-pills">
+                <span class="litho-pill">Quartz-vein Stockworks</span>
+                <span class="litho-pill">Chalcopyrite / Malachite</span>
+                <span class="litho-pill">Potassic Alteration</span>
+                <span class="litho-pill">Silicified Shear Zones</span>
+              </div>
+            </div>
+
+            <div class="pane-card margin-top-sm">
+              <h4 class="pane-card-title">Outcrop & Core Photo Gallery</h4>
+              <div class="outcrop-gallery-row">
+                <div class="gallery-img-box">
+                  <div class="img-placeholder-bg"><i class="fa-solid fa-gem text-green"></i></div>
+                  <span class="img-caption">High-Grade Outcrop Gossan (24.8 g/t Au)</span>
+                </div>
+                <div class="gallery-img-box">
+                  <div class="img-placeholder-bg"><i class="fa-solid fa-bore-hole text-green"></i></div>
+                  <span class="img-caption">Diamond Core Tray (PTRD004 @ 142m)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: HISTORICAL WORK -->
+          <div class="left-tab-pane" id="tabDrilling">
+            <div class="pane-card">
+              <h4 class="pane-card-title">Significant Historical Drill Intercepts Table</h4>
+              <div class="table-responsive">
+                <table class="intercepts-table">
+                  <thead>
+                    <tr>
+                      <th>Hole ID</th>
+                      <th>Type</th>
+                      <th>From (m)</th>
+                      <th>To (m)</th>
+                      <th>Interval (m)</th>
+                      <th>Grade (Au)</th>
+                      <th>Grade (Cu)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detailDrillTableBody">
+                    <tr>
+                      <td><strong>PTR014</strong></td>
+                      <td><span class="badge-tech">RC</span></td>
+                      <td>48.0m</td>
+                      <td>60.0m</td>
+                      <td><strong>12.0m</strong></td>
+                      <td><strong class="text-green">4.82 g/t Au</strong></td>
+                      <td>0.85% Cu</td>
+                    </tr>
+                    <tr>
+                      <td><strong>PTR014 (incl)</strong></td>
+                      <td><span class="badge-tech">RC</span></td>
+                      <td>51.0m</td>
+                      <td>54.0m</td>
+                      <td><strong>3.0m</strong></td>
+                      <td><strong class="text-green">14.20 g/t Au</strong></td>
+                      <td>1.42% Cu</td>
+                    </tr>
+                    <tr>
+                      <td><strong>PTR022</strong></td>
+                      <td><span class="badge-tech">RC</span></td>
+                      <td>84.0m</td>
+                      <td>98.0m</td>
+                      <td><strong>14.0m</strong></td>
+                      <td><strong class="text-green">2.45 g/t Au</strong></td>
+                      <td>1.15% Cu</td>
+                    </tr>
+                    <tr>
+                      <td><strong>PTRD004</strong></td>
+                      <td><span class="badge-tech">Diamond</span></td>
+                      <td>138.0m</td>
+                      <td>156.0m</td>
+                      <td><strong>18.0m</strong></td>
+                      <td><strong class="text-green">3.10 g/t Au</strong></td>
+                      <td>0.92% Cu</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: DOCUMENTS -->
+          <div class="left-tab-pane" id="tabVDR">
+            <div class="pane-card">
+              <h4 class="pane-card-title">Confidential Technical Data Room Files</h4>
+              <p class="pane-sub-desc">Access to files requires executing Mutual Confidentiality NDA. Watermarked downloads enabled.</p>
+              
+              <div class="vdr-files-list">
+                <div class="vdr-file-item">
+                  <i class="fa-solid fa-file-pdf text-red file-icon"></i>
+                  <div class="file-details">
+                    <strong>Technical Evaluation Report (Paterson South).pdf</strong>
+                    <span>14.8 MB • JORC 2012 Compliant</span>
+                  </div>
+                  <button class="btn-secondary btn-sm" onclick="openVdrModal('Paterson South')"><i class="fa-solid fa-lock"></i> Unlock</button>
+                </div>
+
+                <div class="vdr-file-item">
+                  <i class="fa-solid fa-file-csv text-green file-icon"></i>
+                  <div class="file-details">
+                    <strong>Drill_Holes_Assays_Complete_Database.csv</strong>
+                    <span>8.2 MB • 142 Collars & Assays</span>
+                  </div>
+                  <button class="btn-secondary btn-sm" onclick="openVdrModal('Paterson South')"><i class="fa-solid fa-lock"></i> Unlock</button>
+                </div>
+
+                <div class="vdr-file-item">
+                  <i class="fa-solid fa-file-zipper text-purple file-icon"></i>
+                  <div class="file-details">
+                    <strong>GIS_Shapefiles_Aeromag_Contours.zip</strong>
+                    <span>32.5 MB • GeoTIFFs, SHP, KML</span>
+                  </div>
+                  <button class="btn-secondary btn-sm" onclick="openVdrModal('Paterson South')"><i class="fa-solid fa-lock"></i> Unlock</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- End detail-deal-card -->
+
+        <!-- RIGHT COLUMN (60%): INTERACTIVE JURISDICTION GIS FOCUS MAP -->
+        <div class="detail-map-card">
+          <div id="detailMap" class="detail-map-viewport"></div>
+
+          <!-- Map Seller Layers Control Widget -->
+          <div class="detail-map-layers-widget">
+            <div class="detail-layers-title">Seller Technical Overlays:</div>
+            <div class="detail-layer-checks">
+              <label class="detail-check-label">
+                <input type="checkbox" id="chkSellerGeochem" checked>
+                <span class="check-box-indicator geochem-box"></span> Geochem Assays
+              </label>
+              <label class="detail-check-label">
+                <input type="checkbox" id="chkSellerGeophysics" checked>
+                <span class="check-box-indicator geophysics-box"></span> Geophysics Anomaly
+              </label>
+              <label class="detail-check-label">
+                <input type="checkbox" id="chkSellerNativeTitle" checked>
+                <span class="check-box-indicator heritage-box"></span> Native Title & Heritage
+              </label>
+              <label class="detail-check-label">
+                <input type="checkbox" id="chkSellerDrilling" checked>
+                <span class="check-box-indicator drill-box"></span> Drill Holes (RC/DD)
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- End detail-hero-grid -->
+
+    </div> <!-- End detail-scroll-body -->
+
+  </div> <!-- End tenementDetailPage -->
+
+  <!-- Virtual Data Room & NDA Modal -->
+  <div class="modal-overlay" id="vdrModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-shield-halved modal-icon"></i>
+          <div>
+            <h3 id="modalTenementTitle">Virtual Data Room (VDR) Access</h3>
+            <p id="modalTenementSub" class="modal-subtitle">E 45/5892 • Paterson South Gold-Copper Project</p>
+          </div>
+        </div>
+        <button class="modal-close" id="closeVdrModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="nda-notice-box">
+          <i class="fa-solid fa-circle-info info-icon"></i>
+          <div>
+            <strong>Confidential Data Room (Tier 2 Access)</strong>
+            <p>Accessing aeromagnetic datasets, raw drill hole CSV logs, and JORC 2012 technical reports requires a digital Non-Disclosure Agreement (NDA).</p>
+          </div>
+        </div>
+
+        <div class="vdr-files-list">
+          <h4>Protected Files in Data Room:</h4>
+          <ul class="file-tree">
+            <li><i class="fa-solid fa-file-pdf pdf"></i> JORC_2012_Independent_Geologist_Report_2025.pdf <span class="file-size">(24.5 MB)</span></li>
+            <li><i class="fa-solid fa-file-csv csv"></i> Drillhole_Database_Assays_Au_Cu_2024.csv <span class="file-size">(8.2 MB)</span></li>
+            <li><i class="fa-solid fa-map-location-dot map"></i> HighRes_Aeromagnetic_TMI_RTP_Grid.tif <span class="file-size">(112 MB)</span></li>
+            <li><i class="fa-solid fa-file-contract doc"></i> Heritage_Agreement_Executed_NativeTitle.pdf <span class="file-size">(4.1 MB)</span></li>
+          </ul>
+        </div>
+
+        <div class="nda-form">
+          <label class="nda-checkbox">
+            <input type="checkbox" id="ndaConsentCheck">
+            <span>I agree to the <strong>Global Tenement Exchange Mutual Confidentiality Agreement</strong>. I understand downloads will be dynamically watermarked with my user identity (JS / samru@example.com).</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelNdaBtn">Cancel</button>
+        <button class="btn-primary" id="executeNdaBtn" disabled>
+          <i class="fa-solid fa-key"></i> Sign NDA & Unlock VDR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Custom JS -->
+  <script src="main.js?v=43.0"></script>
+</body>
+</html>
